@@ -1,7 +1,9 @@
 package com.cityride.cabservice.config;
 
+import com.cityride.cabservice.security.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
@@ -33,31 +35,64 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            CustomAuthenticationEntryPoint authenticationEntryPoint
+    ) throws Exception {
+
         http
-                .csrf(csrf -> csrf.disable())   // stateless API, no cookies
+                .csrf(csrf -> csrf.disable())
+
                 .cors(Customizer.withDefaults())
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .sessionManagement(s ->
+                        s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // Custom 401 error response
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                )
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public APIs
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/customers").permitAll()
+
                         // Swagger without authentication
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
                         .requestMatchers("/actuator/health").permitAll()
+
                         // Protected APIs
-                        .requestMatchers("/api/bookings/**", "/api/payments/**").authenticated()
+                        .requestMatchers(
+                                "/api/bookings/**",
+                                "/api/payments/**"
+                        ).authenticated()
+
                         // Everything else
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated()
+                )
+
+                // JWT authentication
                 .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter())));
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(jwtAuthConverter())
+                        )
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                );
 
         return http.build();
     }
+
 
     // Maps the "roles" claim in the JWT to ROLE_USER / ROLE_ADMIN
     private JwtAuthenticationConverter jwtAuthConverter() {
@@ -82,5 +117,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
         return source;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
     }
 }

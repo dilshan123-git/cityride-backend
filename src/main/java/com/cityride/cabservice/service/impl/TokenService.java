@@ -1,5 +1,6 @@
 package com.cityride.cabservice.service.impl;
 
+import com.cityride.cabservice.dto.AccessTokenDto;
 import com.cityride.cabservice.entity.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +25,7 @@ public class TokenService {
         return Duration.ofMinutes(expirationMinutes).toSeconds();
     }
 
-    public String generateToken(AuthUser user) {
+    public String generateToken(AccessTokenDto user) {
         Instant now = Instant.now();
 
         String role = user.getRole().toString().replaceFirst("^ROLE_", "");
@@ -36,6 +37,9 @@ public class TokenService {
                 .subject(user.getEmail())
                 .claim("uid", user.getUserId())
                 .claim("roles", List.of(role))
+                .claim("expiresInSeconds", user.getExpiresInSeconds())
+                .claim("tokenType", user.getTokenType())
+                .claim("email", user.getEmail())
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

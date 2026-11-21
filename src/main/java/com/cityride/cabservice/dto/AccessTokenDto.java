@@ -8,6 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class AccessTokenDto {
+    Integer userId;
+    String email;
     String tokenType;
     long expiresInSeconds;
     String role;

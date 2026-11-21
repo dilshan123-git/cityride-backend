@@ -1,6 +1,7 @@
 
 package com.cityride.cabservice.controller;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.LoginRequestDto;
 import com.cityride.cabservice.dto.LoginResponseDto;
 import com.cityride.cabservice.service.impl.LoginAuthServiceImpl;
@@ -24,15 +25,18 @@ public class AuthController {
     private final LoginAuthServiceImpl authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(
+    public ResponseEntity<CommonResponseDto<LoginResponseDto>> login(
             @Valid @RequestBody LoginRequestDto request) {
 
-        logger.info("Login request received");
-        logger.debug("Validating login request");
-        logger.info("Authenticating user");
-        LoginResponseDto response = authService.login(request);
-        logger.info("Login completed successfully");
+        logger.info("Login API request received");
 
-        return ResponseEntity.ok(response);
+        LoginResponseDto response = authService.login(request);
+
+        return ResponseEntity.ok(
+                CommonResponseDto.success(
+                        "Login successful",
+                        response
+                )
+        );
     }
 }

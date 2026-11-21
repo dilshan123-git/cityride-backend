@@ -57,11 +57,13 @@ public class LoginAuthServiceImpl {
             accessTokenDto.setRole(user.getRole().toString());
             accessTokenDto.setExpiresInSeconds(tokenService.getExpiresInSeconds());
             accessTokenDto.setTokenType("Login Token");
+            accessTokenDto.setEmail(user.getEmail());
+            accessTokenDto.setUserId(user.getUserId());
 
             log.debug("Generating access token");
 
             LoginResponseDto loginResponseDto = new LoginResponseDto();
-            loginResponseDto.setAccessToken(tokenService.generateToken(user));
+            loginResponseDto.setAccessToken(tokenService.generateToken(accessTokenDto));
             loginResponseDto.setMessage("Login successful");
 
             log.info("Access token generated successfully");
