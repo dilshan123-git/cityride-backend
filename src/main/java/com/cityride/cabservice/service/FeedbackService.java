@@ -1,18 +1,20 @@
+
 package com.cityride.cabservice.service;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.FeedbackDTO;
 
 import java.util.List;
 
 public interface FeedbackService {
 
-    FeedbackDTO createFeedback(FeedbackDTO feedbackDTO);
+    CommonResponseDto<FeedbackDTO> createFeedback(FeedbackDTO dto);
 
-    List<FeedbackDTO> getAllFeedback();
+    CommonResponseDto<List<FeedbackDTO>> getAllFeedback();
 
-    FeedbackDTO getFeedbackById(Integer id);
+    CommonResponseDto<FeedbackDTO> getFeedbackById(Integer id);
 
-    FeedbackDTO updateFeedback(Integer id, FeedbackDTO feedbackDTO);
+    CommonResponseDto<FeedbackDTO> updateFeedback(Integer id, FeedbackDTO dto);
 
-    void deleteFeedback(Integer id);
+    CommonResponseDto<Void> deleteFeedback(Integer id);
 }
