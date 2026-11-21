@@ -62,7 +62,7 @@ public class SecurityConfig {
                         // Public APIs
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/customers").permitAll()
-
+                        .requestMatchers("/api/drivers/**").authenticated()
                         // Swagger without authentication
                         .requestMatchers(
                                 "/swagger-ui/**",

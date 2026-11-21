@@ -1,18 +1,20 @@
+
 package com.cityride.cabservice.service;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.DriverDTO;
 
 import java.util.List;
 
 public interface DriverService {
 
-    DriverDTO createDriver(DriverDTO driverDTO);
+    CommonResponseDto<DriverDTO> createDriver(DriverDTO dto);
 
-    List<DriverDTO> getAllDrivers();
+    CommonResponseDto<List<DriverDTO>> getAllDrivers();
 
-    DriverDTO getDriverById(Integer id);
+    CommonResponseDto<DriverDTO> getDriverById(Integer id);
 
-    DriverDTO updateDriver(Integer id, DriverDTO driverDTO);
+    CommonResponseDto<DriverDTO> updateDriver(Integer id, DriverDTO dto);
 
-    void deleteDriver(Integer id);
+    CommonResponseDto<Void> deleteDriver(Integer id);
 }

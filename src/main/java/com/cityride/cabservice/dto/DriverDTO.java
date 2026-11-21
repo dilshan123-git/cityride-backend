@@ -1,6 +1,7 @@
 package com.cityride.cabservice.dto;
 
 import com.cityride.cabservice.enums.Availability;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,4 +16,8 @@ public class DriverDTO {
     private String licenseNumber;
     private String address;
     private Availability availability;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
 }

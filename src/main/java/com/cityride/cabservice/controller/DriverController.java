@@ -1,9 +1,12 @@
+
 package com.cityride.cabservice.controller;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.DriverDTO;
 import com.cityride.cabservice.service.DriverService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,50 +18,54 @@ import java.util.List;
 @RequestMapping("/api/drivers")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class DriverController {
 
     private final DriverService driverService;
 
     @PostMapping
-    public ResponseEntity<DriverDTO> createDriver(
+    public ResponseEntity<CommonResponseDto<DriverDTO>> createDriver(
             @RequestBody DriverDTO driverDTO) {
+
+        log.info("REST request to create driver. Email: {}", driverDTO.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(driverService.createDriver(driverDTO));
     }
 
-    // READ ALL
     @GetMapping
-    public ResponseEntity<List<DriverDTO>> getAllDrivers() {
+    public ResponseEntity<CommonResponseDto<List<DriverDTO>>> getAllDrivers() {
+
+        log.info("REST request to retrieve all drivers");
 
         return ResponseEntity.ok(driverService.getAllDrivers());
     }
 
-    // READ BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<DriverDTO> getDriverById(
+    public ResponseEntity<CommonResponseDto<DriverDTO>> getDriverById(
             @PathVariable Integer id) {
+
+        log.info("REST request to retrieve driver. ID: {}", id);
 
         return ResponseEntity.ok(driverService.getDriverById(id));
     }
 
-    // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<DriverDTO> updateDriver(
+    public ResponseEntity<CommonResponseDto<DriverDTO>> updateDriver(
             @PathVariable Integer id,
             @RequestBody DriverDTO driverDTO) {
 
-        return ResponseEntity.ok(
-                driverService.updateDriver(id, driverDTO));
+        log.info("REST request to update driver. ID: {}", id);
+
+        return ResponseEntity.ok(driverService.updateDriver(id, driverDTO));
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDriver(
+    public ResponseEntity<CommonResponseDto<Void>> deleteDriver(
             @PathVariable Integer id) {
 
-        driverService.deleteDriver(id);
+        log.info("REST request to delete driver. ID: {}", id);
 
-        return ResponseEntity.ok("Driver deleted successfully");
+        return ResponseEntity.ok(driverService.deleteDriver(id));
     }
 }
