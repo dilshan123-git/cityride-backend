@@ -1,6 +1,8 @@
+
 package com.cityride.cabservice.service.impl;
 
 import com.cityride.cabservice.dto.BookingDTO;
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.entity.Booking;
 import com.cityride.cabservice.entity.Customer;
 import com.cityride.cabservice.entity.Driver;
@@ -14,6 +16,7 @@ import com.cityride.cabservice.repository.VehicleRepository;
 import com.cityride.cabservice.service.BookingService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class BookingServiceImpl implements BookingService {
 
@@ -34,12 +38,17 @@ public class BookingServiceImpl implements BookingService {
 
     // CREATE BOOKING
     @Override
-    public BookingDTO createBooking(BookingDTO dto) {
+    public CommonResponseDto<BookingDTO> createBooking(BookingDTO dto) {
+
+        log.info("Creating booking for customer ID: {}", dto.getCustomerId());
 
         Customer customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Customer not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Customer not found. Customer ID: {}", dto.getCustomerId());
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Customer not found"
+                    );
+                });
 
         Booking booking = new Booking();
 
@@ -58,46 +67,84 @@ public class BookingServiceImpl implements BookingService {
                 ? dto.getBookingStatus()
                 : BookingStatus.Pending);
 
-        return BookingMapper.convertToDTO(bookingRepository.save(booking));
+        Booking savedBooking = bookingRepository.save(booking);
+        BookingDTO response = BookingMapper.convertToDTO(savedBooking);
+
+        log.info("Booking created successfully. Booking ID: {}",
+                savedBooking.getBookingId());
+
+        return CommonResponseDto.success(
+                "Booking created successfully",
+                response
+        );
     }
 
     // GET ALL BOOKINGS
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDTO> getAllBookings() {
+    public CommonResponseDto<List<BookingDTO>> getAllBookings() {
 
-        return bookingRepository.findAll()
+        log.info("Retrieving all bookings");
+
+        List<BookingDTO> bookings = bookingRepository.findAll()
                 .stream()
                 .map(BookingMapper::convertToDTO)
                 .toList();
+
+        log.info("Retrieved {} bookings successfully", bookings.size());
+
+        return CommonResponseDto.success(
+                "Bookings retrieved successfully",
+                bookings
+        );
     }
 
     // GET BOOKING BY ID
     @Override
     @Transactional(readOnly = true)
-    public BookingDTO getBookingById(Integer id) {
+    public CommonResponseDto<BookingDTO> getBookingById(Integer id) {
+
+        log.info("Retrieving booking ID: {}", id);
 
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Booking not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found. Booking ID: {}", id);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Booking not found"
+                    );
+                });
 
-        return BookingMapper.convertToDTO(booking);
+        BookingDTO response = BookingMapper.convertToDTO(booking);
+
+        log.info("Booking retrieved successfully. Booking ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Booking retrieved successfully",
+                response
+        );
     }
 
     // UPDATE BOOKING
     @Override
-    public BookingDTO updateBooking(Integer id, BookingDTO dto) {
+    public CommonResponseDto<BookingDTO> updateBooking(Integer id, BookingDTO dto) {
+
+        log.info("Updating booking ID: {}", id);
 
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Booking not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found for update. Booking ID: {}", id);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Booking not found"
+                    );
+                });
 
         Customer customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Customer not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Customer not found. Customer ID: {}", dto.getCustomerId());
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Customer not found"
+                    );
+                });
 
         booking.setCustomer(customer);
         booking.setDriver(getDriver(dto.getDriverId()));
@@ -114,19 +161,39 @@ public class BookingServiceImpl implements BookingService {
             booking.setBookingStatus(dto.getBookingStatus());
         }
 
-        return BookingMapper.convertToDTO(bookingRepository.save(booking));
+        Booking updatedBooking = bookingRepository.save(booking);
+        BookingDTO response = BookingMapper.convertToDTO(updatedBooking);
+
+        log.info("Booking updated successfully. Booking ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Booking updated successfully",
+                response
+        );
     }
 
     // DELETE BOOKING
     @Override
-    public void deleteBooking(Integer id) {
+    public CommonResponseDto<Void> deleteBooking(Integer id) {
+
+        log.info("Deleting booking ID: {}", id);
 
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Booking not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found for deletion. Booking ID: {}", id);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Booking not found"
+                    );
+                });
 
         bookingRepository.delete(booking);
+
+        log.info("Booking deleted successfully. Booking ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Booking deleted successfully",
+                null
+        );
     }
 
     // GET DRIVER
@@ -137,9 +204,12 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return driverRepository.findById(driverId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Driver not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Driver not found. Driver ID: {}", driverId);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Driver not found"
+                    );
+                });
     }
 
     // GET VEHICLE
@@ -150,8 +220,11 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Vehicle not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Vehicle not found. Vehicle ID: {}", vehicleId);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Vehicle not found"
+                    );
+                });
     }
 }

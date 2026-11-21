@@ -1,10 +1,13 @@
+
 package com.cityride.cabservice.controller;
 
 import com.cityride.cabservice.dto.BookingDTO;
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.service.BookingService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,55 +19,67 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
+@Slf4j
 public class BookingController {
 
     private final BookingService bookingService;
 
-    // CREATE: any logged-in customer or admin
+    // CREATE: Customer or Admin
     @PostMapping
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
-    public ResponseEntity<BookingDTO> createBooking(
+    public ResponseEntity<CommonResponseDto<BookingDTO>> createBooking(
             @Valid @RequestBody BookingDTO bookingDTO) {
+
+        log.info("Booking creation request received for customer ID: {}",
+                bookingDTO.getCustomerId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(bookingService.createBooking(bookingDTO));
     }
 
-    // READ ALL: admin only
+    // READ ALL: Admin only
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<BookingDTO>> getAllBookings() {
+    public ResponseEntity<CommonResponseDto<List<BookingDTO>>> getAllBookings() {
+
+        log.info("Request received to retrieve all bookings");
 
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
-    // READ BY ID: customer or admin
+    // READ BY ID: Customer or Admin
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
-    public ResponseEntity<BookingDTO> getBookingById(
+    public ResponseEntity<CommonResponseDto<BookingDTO>> getBookingById(
             @PathVariable Integer id) {
+
+        log.info("Request received to retrieve booking ID: {}", id);
 
         return ResponseEntity.ok(bookingService.getBookingById(id));
     }
 
-    // UPDATE: customer or admin
+    // UPDATE: Customer or Admin
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
-    public ResponseEntity<BookingDTO> updateBooking(
+    public ResponseEntity<CommonResponseDto<BookingDTO>> updateBooking(
             @PathVariable Integer id,
             @Valid @RequestBody BookingDTO bookingDTO) {
 
-        return ResponseEntity.ok(bookingService.updateBooking(id, bookingDTO));
+        log.info("Booking update request received. Booking ID: {}", id);
+
+        return ResponseEntity.ok(
+                bookingService.updateBooking(id, bookingDTO)
+        );
     }
 
-    // DELETE: admin only
+    // DELETE: Admin only
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteBooking(
+    public ResponseEntity<CommonResponseDto<Void>> deleteBooking(
             @PathVariable Integer id) {
 
-        bookingService.deleteBooking(id);
+        log.info("Booking deletion request received. Booking ID: {}", id);
 
-        return ResponseEntity.ok("Booking deleted successfully");
+        return ResponseEntity.ok(bookingService.deleteBooking(id));
     }
 }

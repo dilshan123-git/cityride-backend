@@ -1,18 +1,19 @@
 package com.cityride.cabservice.service;
 
 import com.cityride.cabservice.dto.BookingDTO;
+import com.cityride.cabservice.dto.CommonResponseDto;
 
 import java.util.List;
 
 public interface BookingService {
 
-    BookingDTO createBooking(BookingDTO bookingDTO);
+    CommonResponseDto<BookingDTO> createBooking(BookingDTO bookingDTO);
 
-    List<BookingDTO> getAllBookings();
+    CommonResponseDto<List<BookingDTO>> getAllBookings();
 
-    BookingDTO getBookingById(Integer id);
+    CommonResponseDto<BookingDTO> getBookingById(Integer id);
 
-    BookingDTO updateBooking(Integer id, BookingDTO bookingDTO);
+    CommonResponseDto<BookingDTO> updateBooking(Integer id, BookingDTO bookingDTO);
 
-    void deleteBooking(Integer id);
+    CommonResponseDto<Void> deleteBooking(Integer id);
 }
