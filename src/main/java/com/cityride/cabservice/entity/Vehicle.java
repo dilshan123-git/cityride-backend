@@ -23,7 +23,6 @@ public class Vehicle {
     @Column(name = "vehicle_number", nullable = false, unique = true, length = 20)
     private String vehicleNumber;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "vehicle_type", nullable = false)
     private String vehicleType;
 

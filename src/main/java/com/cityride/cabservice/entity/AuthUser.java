@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @Table(name = "auth_user")
 @Setter
 @Getter
-@ToString
+@ToString(exclude = "password")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class AuthUser {
 
     @Id
@@ -36,5 +37,10 @@ public class AuthUser {
     private UserStatus userStatus = UserStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

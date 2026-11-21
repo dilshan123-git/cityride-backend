@@ -4,13 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feedback")
 @Setter
 @Getter
-@ToString
+@ToString(exclude = "booking")
 public class Feedback {
 
     @Id
@@ -19,7 +20,12 @@ public class Feedback {
     private Integer feedbackId;
 
     @OneToOne
-    @JoinColumn(name = "booking_id", nullable = false, unique = true, referencedColumnName = "booking_id")
+    @JoinColumn(
+            name = "booking_id",
+            nullable = false,
+            unique = true,
+            referencedColumnName = "booking_id"
+    )
     private Booking booking;
 
     @Column(name = "rating", nullable = false)
@@ -29,5 +35,10 @@ public class Feedback {
     private String comments;
 
     @Column(name = "feedback_date", nullable = false, updatable = false)
-    private LocalDateTime feedbackDate = LocalDateTime.now();
+    private LocalDateTime feedbackDate;
+
+    @PrePersist
+    protected void onCreate() {
+        feedbackDate = LocalDateTime.now();
+    }
 }

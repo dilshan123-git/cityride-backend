@@ -1,3 +1,4 @@
+
 package com.cityride.cabservice.entity;
 
 import com.cityride.cabservice.enums.PaymentMethod;
@@ -6,14 +7,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payments")
-@Setter
 @Getter
-@ToString
+@Setter
+@ToString(exclude = "booking")
 public class Payment {
 
     @Id
@@ -22,7 +24,12 @@ public class Payment {
     private Integer paymentId;
 
     @OneToOne
-    @JoinColumn(name = "booking_id", nullable = false, unique = true, referencedColumnName = "booking_id")
+    @JoinColumn(
+            name = "booking_id",
+            nullable = false,
+            unique = true,
+            referencedColumnName = "booking_id"
+    )
     private Booking booking;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
@@ -43,6 +50,10 @@ public class Payment {
     private String transactionReference;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

@@ -1,11 +1,11 @@
 package com.cityride.cabservice.entity;
 
-
 import com.cityride.cabservice.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "bookings")
 @Setter
 @Getter
-@ToString
+@ToString(exclude = {"customer", "driver", "vehicle"})
 public class Booking {
 
     @Id
@@ -22,7 +22,8 @@ public class Booking {
     private Integer bookingId;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false, referencedColumnName = "customer_id")
+    @JoinColumn(name = "customer_id", nullable = false,
+            referencedColumnName = "customer_id")
     private Customer customer;
 
     @ManyToOne
@@ -59,9 +60,20 @@ public class Booking {
     private BookingStatus bookingStatus = BookingStatus.Pending;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        bookingDate = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
