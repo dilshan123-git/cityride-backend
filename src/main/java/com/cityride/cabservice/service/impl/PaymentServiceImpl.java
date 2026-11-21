@@ -1,6 +1,7 @@
 
 package com.cityride.cabservice.service.impl;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.PaymentDTO;
 import com.cityride.cabservice.entity.Booking;
 import com.cityride.cabservice.entity.Payment;
@@ -11,6 +12,7 @@ import com.cityride.cabservice.repository.PaymentRepository;
 import com.cityride.cabservice.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,21 +24,33 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
 
+    // CREATE PAYMENT
     @Override
-    public PaymentDTO createPayment(PaymentDTO paymentDTO) {
+    public CommonResponseDto<PaymentDTO> createPayment(PaymentDTO paymentDTO) {
+
+        log.info("Creating payment for booking ID: {}", paymentDTO.getBookingId());
 
         Booking booking = bookingRepository.findById(paymentDTO.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Booking not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found. ID: {}", paymentDTO.getBookingId());
+
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Booking not found"
+                    );
+                });
 
         if (paymentRepository.existsByBooking_BookingId(
                 paymentDTO.getBookingId())) {
+
+            log.warn("Payment already exists for booking ID: {}",
+                    paymentDTO.getBookingId());
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "This booking already has a payment"
@@ -62,46 +76,93 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentDTO.getTransactionReference()
         );
 
-        return PaymentMapping.convertToDTO(paymentRepository.save(payment));
+        Payment savedPayment = paymentRepository.save(payment);
+
+        log.info("Payment created successfully. Payment ID: {}",
+                savedPayment.getPaymentId());
+
+        return CommonResponseDto.success(
+                "Payment created successfully",
+                PaymentMapping.convertToDTO(savedPayment)
+        );
     }
 
+    // GET ALL PAYMENTS
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentDTO> getAllPayments() {
+    public CommonResponseDto<List<PaymentDTO>> getAllPayments() {
 
-        return paymentRepository.findAll()
+        log.info("Fetching all payments");
+
+        List<PaymentDTO> payments = paymentRepository.findAll()
                 .stream()
                 .map(PaymentMapping::convertToDTO)
                 .toList();
+
+        log.info("Successfully fetched {} payments", payments.size());
+
+        return CommonResponseDto.success(
+                "Payments retrieved successfully",
+                payments
+        );
     }
 
+    // GET PAYMENT BY ID
     @Override
     @Transactional(readOnly = true)
-    public PaymentDTO getPaymentById(Integer id) {
+    public CommonResponseDto<PaymentDTO> getPaymentById(Integer id) {
+
+        log.info("Fetching payment. ID: {}", id);
 
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Payment not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Payment not found. ID: {}", id);
 
-        return PaymentMapping.convertToDTO(payment);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Payment not found"
+                    );
+                });
+
+        log.info("Payment fetched successfully. ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Payment retrieved successfully",
+                PaymentMapping.convertToDTO(payment)
+        );
     }
 
+    // UPDATE PAYMENT
     @Override
-    public PaymentDTO updatePayment(Integer id, PaymentDTO paymentDTO) {
+    public CommonResponseDto<PaymentDTO> updatePayment(
+            Integer id, PaymentDTO paymentDTO) {
+
+        log.info("Updating payment. ID: {}", id);
 
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Payment not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Payment not found for update. ID: {}", id);
+
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Payment not found"
+                    );
+                });
 
         Booking booking = bookingRepository.findById(paymentDTO.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Booking not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found during payment update. ID: {}",
+                            paymentDTO.getBookingId());
+
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Booking not found"
+                    );
+                });
 
         if (paymentRepository.existsByBooking_BookingIdAndPaymentIdNot(
                 paymentDTO.getBookingId(), id)) {
+
+            log.warn("Payment update failed. Booking ID {} already has another payment",
+                    paymentDTO.getBookingId());
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "This booking already has another payment"
@@ -125,20 +186,42 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentDTO.getTransactionReference()
         );
 
-        return PaymentMapping.convertToDTO(paymentRepository.save(payment));
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        log.info("Payment updated successfully. ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Payment updated successfully",
+                PaymentMapping.convertToDTO(updatedPayment)
+        );
     }
 
+    // DELETE PAYMENT
     @Override
-    public void deletePayment(Integer id) {
+    public CommonResponseDto<Void> deletePayment(Integer id) {
+
+        log.info("Deleting payment. ID: {}", id);
 
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Payment not found"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Payment not found for deletion. ID: {}", id);
+
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Payment not found"
+                    );
+                });
 
         paymentRepository.delete(payment);
+
+        log.info("Payment deleted successfully. ID: {}", id);
+
+        return CommonResponseDto.success(
+                "Payment deleted successfully",
+                null
+        );
     }
 
+    // CHECK TRANSACTION REFERENCE
     private void checkTransactionReference(
             String reference, Integer paymentId) {
 
@@ -153,12 +236,12 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         if (exists) {
+            log.warn("Transaction reference already exists: {}", reference);
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Transaction reference already exists"
             );
         }
     }
-
-
 }

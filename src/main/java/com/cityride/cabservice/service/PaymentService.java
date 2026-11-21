@@ -1,19 +1,21 @@
 
 package com.cityride.cabservice.service;
 
+import com.cityride.cabservice.dto.CommonResponseDto;
 import com.cityride.cabservice.dto.PaymentDTO;
 
 import java.util.List;
 
 public interface PaymentService {
 
-    PaymentDTO createPayment(PaymentDTO paymentDTO);
+    CommonResponseDto<PaymentDTO> createPayment(PaymentDTO paymentDTO);
 
-    List<PaymentDTO> getAllPayments();
+    CommonResponseDto<List<PaymentDTO>> getAllPayments();
 
-    PaymentDTO getPaymentById(Integer id);
+    CommonResponseDto<PaymentDTO> getPaymentById(Integer id);
 
-    PaymentDTO updatePayment(Integer id, PaymentDTO paymentDTO);
+    CommonResponseDto<PaymentDTO> updatePayment(
+            Integer id, PaymentDTO paymentDTO);
 
-    void deletePayment(Integer id);
+    CommonResponseDto<Void> deletePayment(Integer id);
 }
